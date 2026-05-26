@@ -7,7 +7,7 @@ import { Project } from '../types';
 
 export default function Projects() {
   const [activeCategory, setActiveCategory] = useState<string>('All');
-  const [projectsList, setProjectsList] = useState<Project[]>(projectsData);
+  const [projectsList, setProjectsList] = useState<Project[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -17,12 +17,13 @@ export default function Projects() {
         return res.json();
       })
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setProjectsList(data);
         }
       })
       .catch(err => {
-        console.warn('Could not fetch projects from server API, using local fallback:', err);
+        console.warn('Could not fetch projects from server API:', err);
+        setProjectsList([]);
       })
       .finally(() => {
         setLoading(false);
@@ -82,39 +83,52 @@ export default function Projects() {
           ))}
         </div>
 
-        {/* 9 columns grid (1 col mobile, 2 col tablet, 3 col desktop) as specified */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader className="w-8 h-8 text-indigo-500 animate-spin mb-3" />
+            <span className="text-xs text-slate-400 font-mono">Synchronizing portfolio index...</span>
+          </div>
+        ) : (
+          <>
+            {/* 9 columns grid (1 col mobile, 2 col tablet, 3 col desktop) as specified */}
+            {filteredProjects.length > 0 && (
               <motion.div
                 layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.35 }}
-                key={project.id}
-                className="h-full"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               >
-                <ProjectCard project={project} />
+                <AnimatePresence mode="popLayout">
+                  {filteredProjects.map((project) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.35 }}
+                      key={project.id}
+                      className="h-full"
+                    >
+                      <ProjectCard project={project} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </motion.div>
-            ))}
-          </AnimatePresence>
-        </motion.div>
+            )}
 
-        {/* Feedback empty state if filtering matches nothing */}
-        {filteredProjects.length === 0 && (
-          <div className="p-16 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center">
-            <FolderGit2 className="w-12 h-12 text-slate-400 mb-4 animate-bounce" />
-            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-sans">
-              No Projects Found
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
-              Currently compiling works inside the {activeCategory} category.
-            </p>
-          </div>
+            {/* Feedback empty state if filtering matches nothing or no projects present */}
+            {filteredProjects.length === 0 && (
+              <div className="p-16 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center">
+                <FolderGit2 className="w-12 h-12 text-slate-400 mb-4 animate-bounce" />
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-sans">
+                  No Projects Found
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+                  {projectsList.length === 0 
+                    ? 'No live database records found. Populate projects within your Admin panel.'
+                    : `Currently compiling works inside the ${activeCategory} category.`}
+                </p>
+              </div>
+            )}
+          </>
         )}
 
       </div>

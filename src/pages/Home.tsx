@@ -1,13 +1,35 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ChevronRight, ArrowDown, Cpu, Briefcase, Award, Zap, Heart, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ArrowDown, Cpu, Briefcase, Award, Zap, Heart, CheckCircle2, Loader } from 'lucide-react';
 import TypewriterText from '../components/TypewriterText';
 import SkillBadge from '../components/SkillBadge';
 import ProjectCard from '../components/ProjectCard';
-import { projectsData } from '../data';
+import { Project } from '../types';
 
 export default function Home() {
-  const featuredProjects = projectsData.slice(0, 3);
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(res => {
+        if (!res.ok) throw new Error('API fetch error');
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setFeaturedProjects(data.slice(0, 3));
+        }
+      })
+      .catch(err => {
+        console.warn('Could not fetch projects in Home view:', err);
+        setFeaturedProjects([]);
+      })
+      .finally(() => {
+        setLoadingProjects(false);
+      });
+  }, []);
 
   const featuredSkills = [
     { name: 'HTML', iconName: 'Html5', level: 95 },
@@ -253,11 +275,28 @@ export default function Home() {
         </motion.div>
 
         {/* 3 columns list */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {featuredProjects.map((p) => (
-            <ProjectCard key={p.id} project={p} />
-          ))}
-        </div>
+        {loadingProjects ? (
+          <div className="flex flex-col items-center justify-center py-16 mb-16">
+            <Loader className="w-8 h-8 text-indigo-500 animate-spin mb-3" />
+            <span className="text-xs text-slate-400 font-mono">Synchronizing showcases...</span>
+          </div>
+        ) : featuredProjects.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {featuredProjects.map((p) => (
+              <ProjectCard key={p.id} project={p} />
+            ))}
+          </div>
+        ) : (
+          <div className="p-16 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center max-w-xl mx-auto mb-16 bg-white/30 dark:bg-slate-900/10 backdrop-blur-xs">
+            <Briefcase className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" />
+            <h3 className="text-md font-bold text-slate-700 dark:text-slate-300 font-sans">
+              No Projects Published Yet
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-500 font-mono mt-1">
+              Connect and populate your dynamic works inside your Admin dashboard panel.
+            </p>
+          </div>
+        )}
 
         {/* Dynamic Nav Button */}
         <div className="flex justify-center">

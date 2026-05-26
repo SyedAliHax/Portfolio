@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Briefcase, Calendar } from 'lucide-react';
-import { experienceData } from '../data';
+import { Briefcase, Calendar, Loader } from 'lucide-react';
 import ExperienceCard from '../components/ExperienceCard';
 import { Experience as ExpType } from '../types';
 
 export default function Experience() {
-  const [experiences, setExperiences] = useState<ExpType[]>(experienceData);
+  const [experiences, setExperiences] = useState<ExpType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     fetch('/api/experiences')
@@ -15,12 +15,16 @@ export default function Experience() {
         return res.json();
       })
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setExperiences(data);
         }
       })
       .catch(err => {
-        console.warn('Could not fetch experiences from server API, using local fallback:', err);
+        console.warn('Could not fetch experiences from server API:', err);
+        setExperiences([]);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
@@ -52,15 +56,34 @@ export default function Experience() {
         {/* Timeline Matrix Structure */}
         <div className="relative w-full max-w-5xl mx-auto mt-12 pb-12">
           
-          {/* Central Connecting Timeline Line (Drawn in blue-to-purple linear gradient) */}
-          <div className="absolute left-4 md:left-1/2 top-4 bottom-4 -translate-x-[1px] w-[2px] bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 opacity-60 dark:opacity-40" />
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader className="w-8 h-8 text-indigo-500 animate-spin mb-3" />
+              <span className="text-xs text-slate-400 font-mono">Synchronizing professional timeline...</span>
+            </div>
+          ) : experiences.length > 0 ? (
+            <>
+              {/* Central Connecting Timeline Line (Drawn in blue-to-purple linear gradient) */}
+              <div className="absolute left-4 md:left-1/2 top-4 bottom-4 -translate-x-[1px] w-[2px] bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500 opacity-60 dark:opacity-40" />
 
-          {/* Core Mapping of Experience Cards */}
-          <div className="flex flex-col w-full relative">
-            {experiences.map((exp, idx) => (
-              <ExperienceCard key={exp.id} experience={exp} index={idx} />
-            ))}
-          </div>
+              {/* Core Mapping of Experience Cards */}
+              <div className="flex flex-col w-full relative">
+                {experiences.map((exp, idx) => (
+                  <ExperienceCard key={exp.id} experience={exp} index={idx} />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="p-16 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-3xl flex flex-col items-center justify-center max-w-xl mx-auto bg-white/30 dark:bg-slate-950/10 backdrop-blur-xs">
+              <Calendar className="w-12 h-12 text-slate-400 dark:text-slate-600 mb-4 animate-bounce" />
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 font-sans">
+                No Experience Found
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+                Timeline is currently clear. Add professional milestones through your Admin dashboard.
+              </p>
+            </div>
+          )}
 
         </div>
 

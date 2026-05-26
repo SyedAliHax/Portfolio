@@ -185,7 +185,7 @@ app.get('/api/projects', async (req, res) => {
           category: p.category || 'Full Stack',
           gradient: p.gradient || 'from-indigo-600 via-indigo-700 to-violet-800',
           imageUrl: p.image_url || '',
-          showGithub: p.show_github !== undefined ? p.show_github : true
+          showGithub: p.show_github === true
         }));
         return res.json(mapped);
       } else if (error) {
@@ -203,14 +203,6 @@ app.post('/api/projects', ensureConnected, async (req, res) => {
   const p = req.body;
   
   try {
-    const { data: latest, error: maxError } = await supabaseClient
-      .from('projects')
-      .select('id')
-      .order('id', { ascending: false })
-      .limit(1);
-
-    const nextId = (!maxError && latest && latest.length > 0) ? (latest[0].id + 1) : 1;
-
     const newProj = {
       title: p.title || 'New Project',
       description: p.description || '',
@@ -220,23 +212,25 @@ app.post('/api/projects', ensureConnected, async (req, res) => {
       category: p.category || 'Full Stack',
       gradient: p.gradient || 'from-indigo-600 via-purple-600 to-pink-500',
       image_url: p.imageUrl || '',
-      show_github: p.showGithub !== undefined ? p.showGithub : true
+      show_github: p.showGithub === true
     };
 
-    const { error } = await supabaseClient.from('projects').insert([newProj]);
+    const { data, error } = await supabaseClient.from('projects').insert([newProj]).select();
 
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
 
-    return res.json({ success: true, project: newProj });
+    const savedProj = (data && data.length > 0) ? data[0] : newProj;
+    return res.json({ success: true, project: savedProj });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Database write error' });
   }
 });
 
 app.put('/api/projects/:id', ensureConnected, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const paramId = req.params.id;
+  const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
   const p = req.body;
 
   try {
@@ -249,7 +243,7 @@ app.put('/api/projects/:id', ensureConnected, async (req, res) => {
       category: p.category,
       gradient: p.gradient,
       image_url: p.imageUrl,
-      show_github: p.showGithub
+      show_github: p.showGithub === true
     }).eq('id', id);
 
     if (error) {
@@ -263,7 +257,8 @@ app.put('/api/projects/:id', ensureConnected, async (req, res) => {
 });
 
 app.delete('/api/projects/:id', ensureConnected, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const paramId = req.params.id;
+  const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
 
   try {
     const { error } = await supabaseClient.from('projects').delete().eq('id', id);
@@ -294,12 +289,14 @@ app.get('/api/experiences', async (req, res) => {
         return res.json(mapped);
       } else if (error) {
         console.error('[Supabase Error] Select experiences failed:', error.message);
+        return res.json([]);
       }
     } catch (err) {
-      console.warn('[Supabase] Failed to fetch experience list, defaulting to server list', err);
+      console.warn('[Supabase] Failed to fetch experience list:', err);
+      return res.json([]);
     }
   }
-  return res.json(serverExperiences);
+  return res.json([]); // Return empty list instead of serverExperiences mock values when database connection is online
 });
 
 app.post('/api/experiences', ensureConnected, async (req, res) => {
@@ -315,20 +312,22 @@ app.post('/api/experiences', ensureConnected, async (req, res) => {
       skills: Array.isArray(exp.skills) ? exp.skills : []
     };
 
-    const { error } = await supabaseClient.from('experiences').insert([newExp]);
+    const { data, error } = await supabaseClient.from('experiences').insert([newExp]).select();
 
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
 
-    return res.json({ success: true, experience: newExp });
+    const savedExp = (data && data.length > 0) ? data[0] : newExp;
+    return res.json({ success: true, experience: savedExp });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Database write error' });
   }
 });
 
 app.put('/api/experiences/:id', ensureConnected, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const paramId = req.params.id;
+  const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
   const exp = req.body;
 
   try {
@@ -352,7 +351,8 @@ app.put('/api/experiences/:id', ensureConnected, async (req, res) => {
 });
 
 app.delete('/api/experiences/:id', ensureConnected, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const paramId = req.params.id;
+  const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
 
   try {
     const { error } = await supabaseClient.from('experiences').delete().eq('id', id);

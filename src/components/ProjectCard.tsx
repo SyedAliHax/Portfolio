@@ -108,7 +108,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
 
         {/* FOOTER: Buttons */}
         <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
-          {(project.showGithub !== false && project.githubUrl) ? (
+          {(project.showGithub && project.githubUrl) ? (
             <>
               <motion.a
                 whileHover={{ scale: 1.05 }}

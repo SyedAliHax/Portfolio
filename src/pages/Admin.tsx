@@ -925,18 +925,22 @@ export default function Admin() {
                 <div className="p-4 bg-slate-950 border border-slate-850 rounded-2xl flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-xs font-extrabold text-white block">Interactive Code Access (Future Scope)</span>
-                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">Toggle this setting to activate GitHub Source Code links on hover cards in the future.</p>
+                      <span className="text-xs font-extrabold text-white block">Interactive Code Access</span>
+                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">Toggle this setting to activate GitHub Source Code links on hover cards.</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={!!projectForm.showGithub}
-                        onChange={(e) => setProjectForm(prev => ({ ...prev, showGithub: e.target.checked }))}
-                        className="sr-only peer"
+                    <button
+                      type="button"
+                      onClick={() => setProjectForm(prev => ({ ...prev, showGithub: !prev.showGithub }))}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        projectForm.showGithub ? 'bg-indigo-600' : 'bg-slate-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          projectForm.showGithub ? 'translate-x-5' : 'translate-x-0'
+                        }`}
                       />
-                      <div className="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white" />
-                    </label>
+                    </button>
                   </div>
 
                   {projectForm.showGithub && (
