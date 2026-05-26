@@ -153,6 +153,13 @@ let serverExperiences = [
   },
 ];
 
+let serverSocials = {
+  github: 'https://github.com/syedalibg',
+  linkedin: 'https://linkedin.com/in/syedalibg',
+  facebook: 'https://facebook.com',
+  instagram: 'https://instagram.com',
+};
+
 // ========================================================
 // CORE API PORTFOLIO ENDPOINTS
 // ========================================================
@@ -190,13 +197,16 @@ app.get('/api/projects', async (req, res) => {
         return res.json(mapped);
       } else if (error) {
         console.error('[Supabase Error] Select projects failed:', error.message);
+        return res.json([]);
       }
     } catch (err) {
-      console.warn('[Supabase] Failed to fetch projects, using local server fallback', err);
+      console.warn('[Supabase] Failed to fetch projects, returning empty list:', err);
+      return res.json([]);
     }
+  } else {
+    // ONLY return mock fallback data when disconnected (no environment variables at all)
+    return res.json(serverProjects);
   }
-  // Disconnected Mode/Fallback
-  return res.json(serverProjects);
 });
 
 app.post('/api/projects', ensureConnected, async (req, res) => {
@@ -233,8 +243,25 @@ app.put('/api/projects/:id', ensureConnected, async (req, res) => {
   const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
   const p = req.body;
 
+  // Track / update locally in memory as fallback sync
+  const localIndex = serverProjects.findIndex(proj => proj.id === id);
+  if (localIndex !== -1) {
+    serverProjects[localIndex] = {
+      ...serverProjects[localIndex],
+      title: p.title,
+      description: p.description,
+      techStack: p.techStack,
+      githubUrl: p.githubUrl,
+      liveUrl: p.liveUrl,
+      category: p.category,
+      gradient: p.gradient,
+      imageUrl: p.imageUrl,
+      showGithub: p.showGithub === true
+    };
+  }
+
   try {
-    const { error } = await supabaseClient.from('projects').update({
+    const { data, error } = await supabaseClient.from('projects').update({
       title: p.title,
       description: p.description,
       tech_stack: p.techStack,
@@ -244,13 +271,18 @@ app.put('/api/projects/:id', ensureConnected, async (req, res) => {
       gradient: p.gradient,
       image_url: p.imageUrl,
       show_github: p.showGithub === true
-    }).eq('id', id);
+    }).eq('id', id).select();
 
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
 
-    return res.json({ success: true });
+    const rlsBlocked = !data || data.length === 0;
+    if (rlsBlocked) {
+      console.warn(`[Supabase RLS Warning] Project update for ID ${id} affected 0 rows. It might be blocked by Row Level Security updates.`);
+    }
+
+    return res.json({ success: true, rlsBlocked });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Update database error' });
   }
@@ -260,12 +292,21 @@ app.delete('/api/projects/:id', ensureConnected, async (req, res) => {
   const paramId = req.params.id;
   const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
 
+  // Sync locally in memory as fallback
+  serverProjects = serverProjects.filter(p => p.id !== id);
+
   try {
-    const { error } = await supabaseClient.from('projects').delete().eq('id', id);
+    const { data, error } = await supabaseClient.from('projects').delete().eq('id', id).select();
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
-    return res.json({ success: true });
+
+    const rlsBlocked = !data || data.length === 0;
+    if (rlsBlocked) {
+      console.warn(`[Supabase RLS Warning] Project delete for ID ${id} affected 0 rows. It might be blocked by Row Level Security deletions.`);
+    }
+
+    return res.json({ success: true, rlsBlocked });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Deletion error' });
   }
@@ -295,8 +336,10 @@ app.get('/api/experiences', async (req, res) => {
       console.warn('[Supabase] Failed to fetch experience list:', err);
       return res.json([]);
     }
+  } else {
+    // Return mock offline experiences only when disconnected
+    return res.json(serverExperiences);
   }
-  return res.json([]); // Return empty list instead of serverExperiences mock values when database connection is online
 });
 
 app.post('/api/experiences', ensureConnected, async (req, res) => {
@@ -330,21 +373,40 @@ app.put('/api/experiences/:id', ensureConnected, async (req, res) => {
   const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
   const exp = req.body;
 
+  // Track / update locally in memory as fallback sync
+  const localIndex = serverExperiences.findIndex(item => item.id === id);
+  if (localIndex !== -1) {
+    serverExperiences[localIndex] = {
+      ...serverExperiences[localIndex],
+      role: exp.role,
+      company: exp.company,
+      type: exp.type || 'Full-time',
+      period: exp.period,
+      description: exp.description,
+      skills: exp.skills || []
+    };
+  }
+
   try {
-    const { error } = await supabaseClient.from('experiences').update({
+    const { data, error } = await supabaseClient.from('experiences').update({
       role: exp.role,
       company: exp.company,
       type: exp.type,
       period: exp.period,
       description: exp.description,
       skills: exp.skills
-    }).eq('id', id);
+    }).eq('id', id).select();
 
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
 
-    return res.json({ success: true });
+    const rlsBlocked = !data || data.length === 0;
+    if (rlsBlocked) {
+      console.warn(`[Supabase RLS Warning] Experience update for ID ${id} affected 0 rows. It might be blocked by Row Level Security updates.`);
+    }
+
+    return res.json({ success: true, rlsBlocked });
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Database error' });
   }
@@ -354,14 +416,23 @@ app.delete('/api/experiences/:id', ensureConnected, async (req, res) => {
   const paramId = req.params.id;
   const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
 
+  // Sync locally in memory as fallback
+  serverExperiences = serverExperiences.filter(item => item.id !== id);
+
   try {
-    const { error } = await supabaseClient.from('experiences').delete().eq('id', id);
+    const { data, error } = await supabaseClient.from('experiences').delete().eq('id', id).select();
     if (error) {
       return res.status(500).json({ error: `Supabase Error: ${error.message}` });
     }
-    return res.json({ success: true });
+
+    const rlsBlocked = !data || data.length === 0;
+    if (rlsBlocked) {
+      console.warn(`[Supabase RLS Warning] Experience delete for ID ${id} affected 0 rows. It might be blocked by Row Level Security deletions.`);
+    }
+
+    return res.json({ success: true, rlsBlocked });
   } catch (err: any) {
-    return res.status(550).json({ error: err.message || 'Timeline delete error' });
+    return res.status(500).json({ error: err.message || 'Timeline delete error' });
   }
 });
 
@@ -462,7 +533,8 @@ app.get('/api/admin/contacts', async (req, res) => {
 
 // 3. DELETE CONTACT MESSAGE
 app.delete('/api/admin/contacts/:id', ensureConnected, async (req, res) => {
-  const id = parseInt(req.params.id);
+  const paramId = req.params.id;
+  const id = isNaN(Number(paramId)) ? paramId : Number(paramId);
   serverContacts = serverContacts.filter(c => c.id !== id);
 
   try {
@@ -474,6 +546,81 @@ app.delete('/api/admin/contacts/:id', ensureConnected, async (req, res) => {
   } catch (err: any) {
     return res.status(500).json({ error: err.message || 'Contact delete error' });
   }
+});
+
+// 4. MANAGE SOCIAL LINKS ENDPOINTS (GET and PUT)
+app.get('/api/socials', async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('settings')
+        .select('*')
+        .eq('key', 'social_links')
+        .single();
+      
+      if (!error && data && data.value) {
+        const merged = { ...serverSocials, ...data.value };
+        return res.json(merged);
+      }
+    } catch (err) {
+      console.warn('[Supabase] Could not fetch settings table for social_links. Using in-memory fallback.');
+    }
+  }
+  return res.json(serverSocials);
+});
+
+app.put('/api/socials', async (req, res) => {
+  const newSocials = req.body;
+  if (!newSocials || typeof newSocials !== 'object') {
+    return res.status(400).json({ error: 'Body element is invalid. Expected JSON map.' });
+  }
+
+  // Update in-memory fallback instantly
+  serverSocials = { ...serverSocials, ...newSocials };
+
+  if (supabaseClient) {
+    try {
+      // Check if key='social_links' row exists in the settings table
+      const { data: existing, error: fetchErr } = await supabaseClient
+        .from('settings')
+        .select('*')
+        .eq('key', 'social_links');
+
+      let dbError = null;
+      let dataResult = null;
+
+      if (!fetchErr && existing && existing.length > 0) {
+        const { data, error } = await supabaseClient
+          .from('settings')
+          .update({ value: serverSocials })
+          .eq('key', 'social_links')
+          .select();
+        dbError = error;
+        dataResult = data;
+      } else {
+        const { data, error } = await supabaseClient
+          .from('settings')
+          .insert([{ key: 'social_links', value: serverSocials }])
+          .select();
+        dbError = error;
+        dataResult = data;
+      }
+
+      if (dbError) {
+        console.warn('[Supabase Error] Socials persist failed:', dbError.message);
+        return res.json({ success: true, rlsBlocked: true, error: dbError.message });
+      }
+
+      const rlsBlocked = !dataResult || dataResult.length === 0;
+      return res.json({ success: true, rlsBlocked });
+
+    } catch (err: any) {
+      console.error('[Supabase Error] Socials exception block:', err);
+      return res.json({ success: true, rlsBlocked: true, error: err.message });
+    }
+  }
+
+  return res.json({ success: true, rlsBlocked: false, offlineMode: true });
 });
 
 // Health check route

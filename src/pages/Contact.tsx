@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Phone, MapPin, Send, Github, Linkedin, Twitter, MessageCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, Github, Linkedin, MessageCircle, AlertCircle, CheckCircle2, Facebook, Instagram } from 'lucide-react';
+import { useSocialLinks } from '../hooks/useSocialLinks';
 
 export default function Contact() {
+  const { socials: apiSocials } = useSocialLinks();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,10 +16,10 @@ export default function Contact() {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const socials = [
-    { icon: Github, href: 'https://github.com/syedalibg', name: 'GitHub' },
-    { icon: Linkedin, href: 'https://linkedin.com/in/syedalibg', name: 'LinkedIn' },
-    { icon: Twitter, href: 'https://twitter.com/syedalibg', name: 'Twitter/X' },
-    { icon: MessageCircle, href: 'https://wa.me/923451120866', name: 'WhatsApp' },
+    { icon: Github, href: apiSocials.github, name: 'GitHub' },
+    { icon: Linkedin, href: apiSocials.linkedin, name: 'LinkedIn' },
+    { icon: Facebook, href: apiSocials.facebook, name: 'Facebook' },
+    { icon: Instagram, href: apiSocials.instagram, name: 'Instagram' },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

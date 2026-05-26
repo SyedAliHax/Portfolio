@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Github, Linkedin, Twitter, MessageCircle } from 'lucide-react';
+import { ChevronRight, Github, Linkedin, Facebook, Instagram } from 'lucide-react';
+import { useSocialLinks } from '../hooks/useSocialLinks';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { socials } = useSocialLinks();
 
   const quickLinks = [
     { name: 'Home', path: '/' },
@@ -13,10 +15,10 @@ export default function Footer() {
   ];
 
   const socialIcons = [
-    { icon: Github, href: 'https://github.com/syedalibg', name: 'GitHub' },
-    { icon: Linkedin, href: 'https://linkedin.com/in/placeholder', name: 'LinkedIn' },
-    { icon: Twitter, href: 'https://twitter.com/placeholder', name: 'Twitter/X' },
-    { icon: MessageCircle, href: 'https://wa.me/placeholder', name: 'WhatsApp' },
+    { icon: Github, href: socials.github, name: 'GitHub' },
+    { icon: Linkedin, href: socials.linkedin, name: 'LinkedIn' },
+    { icon: Facebook, href: socials.facebook, name: 'Facebook' },
+    { icon: Instagram, href: socials.instagram, name: 'Instagram' },
   ];
 
   return (
@@ -92,9 +94,8 @@ export default function Footer() {
             <span>Built with <span className="text-rose-500">❤️</span> using React & Tailwind</span>
           </div>
           <div className="flex items-center space-x-4">
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-[#60A5FA] transition-colors duration-250">LinkedIn</a>
-            <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-[#60A5FA] transition-colors duration-250">X / Twitter</a>
-            <a href="https://github.com/syedalibg" target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-[#60A5FA] transition-colors duration-250">GitHub</a>
+            <a href={socials.linkedin} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-[#60A5FA] transition-colors duration-250">LinkedIn</a>
+            <a href={socials.github} target="_blank" rel="noreferrer" className="hover:text-slate-900 dark:hover:text-[#60A5FA] transition-colors duration-250">GitHub</a>
             <div className="ml-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full font-bold border border-green-500/20 text-[10px] uppercase select-none tracking-wider animate-pulse flex items-center gap-1.5 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
               SYSTEM ONLINE

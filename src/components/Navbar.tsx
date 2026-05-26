@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, Home, User, FolderGit2, CalendarRange, Mail, Github } from 'lucide-react';
+import { useSocialLinks } from '../hooks/useSocialLinks';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { socials } = useSocialLinks();
 
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
@@ -74,7 +76,7 @@ export default function Navbar() {
               <motion.a
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                href="https://github.com/syedalibg"
+                href={socials.github}
                 target="_blank"
                 rel="noreferrer"
                 aria-label="GitHub Profile Link"
@@ -156,7 +158,7 @@ export default function Navbar() {
         <motion.a
           whileHover={{ scale: 1.1, rotate: 5 }}
           whileTap={{ scale: 0.9 }}
-          href="https://github.com/syedalibg"
+          href={socials.github}
           target="_blank"
           rel="noreferrer"
           aria-label="Visit github profile"

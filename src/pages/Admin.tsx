@@ -19,7 +19,12 @@ import {
   Calendar,
   Sparkles,
   RefreshCw,
-  Eye
+  Eye,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Github,
+  Share2
 } from 'lucide-react';
 import { Project, Experience } from '../types';
 
@@ -27,12 +32,19 @@ export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [password, setPassword] = useState<string>('');
   const [loginError, setLoginError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'contacts' | 'projects' | 'experiences'>('contacts');
+  const [activeTab, setActiveTab] = useState<'contacts' | 'projects' | 'experiences' | 'socials'>('contacts');
 
   // Backend state
   const [contacts, setContacts] = useState<any[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [socials, setSocials] = useState<any>({
+    github: '',
+    linkedin: '',
+    facebook: '',
+    instagram: '',
+  });
+  const [savingSocials, setSavingSocials] = useState<boolean>(false);
   
   // Loading & feedback states
   const [loading, setLoading] = useState<boolean>(false);
@@ -86,43 +98,91 @@ export default function Admin() {
 
   const fetchAllData = async () => {
     setLoading(true);
+    
+    // Check health endpoint for real connection state
     try {
-      // Check health endpoint for real connection state
-      try {
-        const healthRes = await fetch('/api/health');
-        if (healthRes.ok) {
-          const healthData = await healthRes.json();
-          setSupabaseConnected(!!healthData.supabaseConnected);
-        }
-      } catch (e) {
-        console.warn('Could not reach health check status', e);
+      const healthRes = await fetch('/api/health');
+      if (healthRes.ok) {
+        const healthData = await healthRes.json();
+        setSupabaseConnected(!!healthData.supabaseConnected);
       }
+    } catch (e) {
+      console.warn('Could not reach health check status', e);
+    }
 
-      // Fetch Contacts
+    // Fetch Contacts
+    try {
       const contactsRes = await fetch('/api/admin/contacts');
       if (contactsRes.ok) {
         const data = await contactsRes.json();
         setContacts(data);
       }
+    } catch (err) {
+      console.error('Error fetching admin contacts:', err);
+    }
 
-      // Fetch Projects
+    // Fetch Projects
+    try {
       const projectsRes = await fetch('/api/projects');
       if (projectsRes.ok) {
         const data = await projectsRes.json();
         setProjects(data);
       }
+    } catch (err) {
+      console.error('Error fetching projects:', err);
+    }
 
-      // Fetch Experiences
+    // Fetch Experiences
+    try {
       const expRes = await fetch('/api/experiences');
       if (expRes.ok) {
         const data = await expRes.json();
         setExperiences(data);
       }
     } catch (err) {
-      console.error('Error fetching admin dashboard data:', err);
-      showToast('error', 'Error loading sync details from portfolio backends.');
+      console.error('Error fetching experiences:', err);
+    }
+
+    // Fetch Socials
+    try {
+      const socialsRes = await fetch('/api/socials');
+      if (socialsRes.ok) {
+        const data = await socialsRes.json();
+        setSocials(data);
+      }
+    } catch (err) {
+      console.error('Error fetching socials:', err);
+    }
+
+    setLoading(false);
+  };
+
+  const handleSocialSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSocials(true);
+    try {
+      const res = await fetch('/api/socials', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(socials)
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        if (result.rlsBlocked) {
+          showToast('error', 'Warning: Saved locally, but Supabase Row Level Security (RLS) blocked writing settings to database.');
+        } else {
+          showToast('success', 'Social media connections updated successfully!');
+        }
+        fetchAllData();
+      } else {
+        showToast('error', 'Failed to update social links.');
+      }
+    } catch (err) {
+      console.error('Error saving socials:', err);
+      showToast('error', 'Transmission error updating social accounts.');
     } finally {
-      setLoading(false);
+      setSavingSocials(false);
     }
   };
 
@@ -238,7 +298,12 @@ export default function Admin() {
       });
 
       if (res.ok) {
-        showToast('success', isEdit ? 'Project updated successfully!' : 'New Project created successfully!');
+        const result = await res.json();
+        if (result.rlsBlocked) {
+          showToast('error', 'Warning: Saved locally, but Supabase Row Level Security (RLS) blocked writing to database.');
+        } else {
+          showToast('success', isEdit ? 'Project updated successfully!' : 'New Project created successfully!');
+        }
         setIsProjectFormOpen(false);
         fetchAllData();
       } else {
@@ -254,7 +319,12 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        showToast('success', 'Project removed from indices.');
+        const result = await res.json();
+        if (result.rlsBlocked) {
+          showToast('error', 'Warning: Removed locally, but Supabase Row Level Security (RLS) blocked deleting from database.');
+        } else {
+          showToast('success', 'Project removed from indices.');
+        }
         fetchAllData();
       } else {
         showToast('error', 'Removal failure');
@@ -324,7 +394,12 @@ export default function Admin() {
       });
 
       if (res.ok) {
-        showToast('success', isEdit ? 'Experience revised beautifully!' : 'New timeline record registered!');
+        const result = await res.json();
+        if (result.rlsBlocked) {
+          showToast('error', 'Warning: Saved locally on server, but Supabase Row Level Security (RLS) policies blocked database update.');
+        } else {
+          showToast('success', isEdit ? 'Experience revised beautifully!' : 'New timeline record registered!');
+        }
         setIsExperienceFormOpen(false);
         fetchAllData();
       } else {
@@ -340,7 +415,12 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/experiences/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        showToast('success', 'Chronicle deleted.');
+        const result = await res.json();
+        if (result.rlsBlocked) {
+          showToast('error', 'Warning: Removed locally, but Supabase Row Level Security (RLS) blocked deleting from database.');
+        } else {
+          showToast('success', 'Chronicle deleted.');
+        }
         fetchAllData();
       } else {
         showToast('error', 'Failure in removal request.');
@@ -532,6 +612,17 @@ export default function Admin() {
           >
             <Briefcase className="w-4 h-4" />
             CAREER STEPS ({experiences.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('socials')}
+            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
+              activeTab === 'socials'
+                ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
+                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
+            }`}
+          >
+            <Share2 className="w-4 h-4" />
+            SOCIAL NETWORKS
           </button>
         </div>
 
@@ -818,6 +909,116 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+        
+        {/* ========================================================
+            TAB 4: SOCIAL CONNECTIONS SETTINGS PANEL
+           ======================================================== */}
+        {activeTab === 'socials' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-indigo-405" />
+                Manage Social Profile Connections
+              </h2>
+              <p className="text-xs text-slate-400 font-mono mt-1">
+                Customize global portfolio social buttons across Navbar, Footer, and Contact sections instantly.
+              </p>
+            </div>
+
+            <form onSubmit={handleSocialSubmit} className="p-6 sm:p-8 bg-slate-900/35 border border-white/5 rounded-3xl space-y-6 relative overflow-hidden backdrop-blur-md">
+              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none select-none" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                {/* LinkedIn */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="soc-linkedin" className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2">
+                    <Linkedin className="w-4 h-4 text-blue-400" />
+                    LinkedIn Profile URL
+                  </label>
+                  <input
+                    id="soc-linkedin"
+                    type="url"
+                    value={socials.linkedin || ''}
+                    placeholder="https://linkedin.com/in/username"
+                    onChange={(e) => setSocials((prev: any) => ({ ...prev, linkedin: e.target.value }))}
+                    className="px-4 py-3 bg-slate-950 border border-white/5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 duration-200"
+                  />
+                </div>
+
+                {/* GitHub */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="soc-github" className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2">
+                    <Github className="w-4 h-4 text-white" />
+                    GitHub Account URL
+                  </label>
+                  <input
+                    id="soc-github"
+                    type="url"
+                    value={socials.github || ''}
+                    placeholder="https://github.com/username"
+                    onChange={(e) => setSocials((prev: any) => ({ ...prev, github: e.target.value }))}
+                    className="px-4 py-3 bg-slate-950 border border-white/5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 duration-200"
+                  />
+                </div>
+
+                {/* Facebook */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="soc-facebook" className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2">
+                    <Facebook className="w-4 h-4 text-blue-500" />
+                    Facebook Page URL
+                  </label>
+                  <input
+                    id="soc-facebook"
+                    type="url"
+                    value={socials.facebook || ''}
+                    placeholder="https://facebook.com/username"
+                    onChange={(e) => setSocials((prev: any) => ({ ...prev, facebook: e.target.value }))}
+                    className="px-4 py-3 bg-slate-950 border border-white/5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 duration-200"
+                  />
+                </div>
+
+                {/* Instagram */}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="soc-instagram" className="text-xs font-mono font-bold text-slate-400 flex items-center gap-2">
+                    <Instagram className="w-4 h-4 text-rose-400" />
+                    Instagram Account URL
+                  </label>
+                  <input
+                    id="soc-instagram"
+                    type="url"
+                    value={socials.instagram || ''}
+                    placeholder="https://instagram.com/username"
+                    onChange={(e) => setSocials((prev: any) => ({ ...prev, instagram: e.target.value }))}
+                    className="px-4 py-3 bg-slate-950 border border-white/5 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons Row */}
+              <div className="pt-4 border-t border-white/5 flex items-center justify-between gap-4 relative z-10">
+                <span className="text-[10px] font-mono text-slate-500 leading-snug max-w-md">
+                  {!supabaseConnected ? (
+                    <span className="text-rose-400 font-bold uppercase">Disconnected Simulator Mode. Saved locally on active Node server instance.</span>
+                  ) : (
+                    <span className="text-indigo-400 font-semibold uppercase font-sans">Settings write dynamically to active Supabase settings table.</span>
+                  )}
+                </span>
+                <button
+                  type="submit"
+                  disabled={savingSocials}
+                  className="px-5 py-3 hover:opacity-95 text-white bg-indigo-650 hover:bg-indigo-700 rounded-xl text-xs font-bold tracking-wide shadow-md font-mono flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed uppercase text-nowrap shrink-0 transition-all border border-indigo-500/40"
+                >
+                  {savingSocials ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-3.5 h-3.5" />
+                  )}
+                  Save Connections
+                </button>
+              </div>
+            </form>
           </div>
         )}
 
