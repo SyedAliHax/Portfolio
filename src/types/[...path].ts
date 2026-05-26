@@ -4,66 +4,57 @@ import express, { Request, Response, NextFunction } from 'express';
 const app = express();
 app.use(express.json());
 
-// ── Supabase Init ──────────────────────────────────────────
-const supabaseUrl  = process.env.VITE_SUPABASE_URL  || '';
-const supabaseKey  = process.env.VITE_SUPABASE_ANON_KEY || '';
-
+// ── Supabase ───────────────────────────────────────────────
+const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
 let db: ReturnType<typeof createClient> | null = null;
-try {
-  if (supabaseUrl && supabaseKey) {
-    db = createClient(supabaseUrl, supabaseKey);
-    console.log('[Supabase] Connected ✓');
-  } else {
-    console.warn('[Supabase] Missing env vars — running in fallback mode');
-  }
-} catch (e) {
-  console.error('[Supabase] Init failed:', e);
+
+if (supabaseUrl && supabaseKey) {
+  try { db = createClient(supabaseUrl, supabaseKey); }
+  catch (e) { console.error('[Supabase] Init failed:', e); }
 }
 
-// ── In-Memory Fallback Data ────────────────────────────────
+// ── Fallback memory ────────────────────────────────────────
 let memContacts: any[] = [];
 let memSocials = {
-  github:    'https://github.com/syedalibg',
-  linkedin:  'https://linkedin.com/in/syedalibg',
-  facebook:  'https://facebook.com',
+  github: 'https://github.com/syedalibg',
+  linkedin: 'https://linkedin.com/in/syedalibg',
+  facebook: 'https://facebook.com',
   instagram: 'https://instagram.com',
 };
 
-// ── Middleware: require DB for writes ─────────────────────
 const requireDb = (_req: Request, res: Response, next: NextFunction) => {
-  if (!db) return res.status(403).json({ error: 'Database offline — writes disabled.' });
+  if (!db) return res.status(403).json({ error: 'Database offline.' });
   next();
 };
 
-// ── HEALTH ────────────────────────────────────────────────
+// ── HEALTH ─────────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', supabase: !!db, time: new Date().toISOString() });
 });
 
-// ── PROJECTS ──────────────────────────────────────────────
+// ── PROJECTS ───────────────────────────────────────────────
 app.get('/api/projects', async (_req, res) => {
   if (!db) return res.json([]);
   const { data, error } = await db.from('projects').select('*').order('id');
   if (error || !data) return res.json([]);
-  const mapped = data.map((p: any) => ({
+  res.json(data.map((p: any) => ({
     id: p.id, title: p.title, description: p.description,
     techStack: Array.isArray(p.tech_stack) ? p.tech_stack : [],
     githubUrl: p.github_url || '', liveUrl: p.live_url || '',
     category: p.category || 'Full Stack',
     gradient: p.gradient || 'from-indigo-600 via-purple-600 to-pink-500',
     imageUrl: p.image_url || '', showGithub: p.show_github === true,
-  }));
-  res.json(mapped);
+  })));
 });
 
 app.post('/api/projects', requireDb, async (req, res) => {
   const p = req.body;
   const { data, error } = await db!.from('projects').insert([{
-    title: p.title, description: p.description,
-    tech_stack: p.techStack || [], github_url: p.githubUrl || '',
-    live_url: p.liveUrl || '', category: p.category || 'Full Stack',
-    gradient: p.gradient || '', image_url: p.imageUrl || '',
-    show_github: p.showGithub === true,
+    title: p.title, description: p.description, tech_stack: p.techStack || [],
+    github_url: p.githubUrl || '', live_url: p.liveUrl || '',
+    category: p.category || 'Full Stack', gradient: p.gradient || '',
+    image_url: p.imageUrl || '', show_github: p.showGithub === true,
   }]).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, data });
@@ -72,11 +63,10 @@ app.post('/api/projects', requireDb, async (req, res) => {
 app.put('/api/projects/:id', requireDb, async (req, res) => {
   const p = req.body;
   const { data, error } = await db!.from('projects').update({
-    title: p.title, description: p.description,
-    tech_stack: p.techStack || [], github_url: p.githubUrl || '',
-    live_url: p.liveUrl || '', category: p.category,
-    gradient: p.gradient, image_url: p.imageUrl,
-    show_github: p.showGithub === true,
+    title: p.title, description: p.description, tech_stack: p.techStack || [],
+    github_url: p.githubUrl || '', live_url: p.liveUrl || '',
+    category: p.category, gradient: p.gradient,
+    image_url: p.imageUrl, show_github: p.showGithub === true,
   }).eq('id', req.params.id).select();
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true, data });
@@ -88,7 +78,7 @@ app.delete('/api/projects/:id', requireDb, async (req, res) => {
   res.json({ success: true });
 });
 
-// ── EXPERIENCES ───────────────────────────────────────────
+// ── EXPERIENCES ────────────────────────────────────────────
 app.get('/api/experiences', async (_req, res) => {
   if (!db) return res.json([]);
   const { data, error } = await db.from('experiences').select('*').order('id');
@@ -114,24 +104,22 @@ app.delete('/api/experiences/:id', requireDb, async (req, res) => {
   res.json({ success: true });
 });
 
-// ── CONTACT ───────────────────────────────────────────────
+// ── CONTACT ────────────────────────────────────────────────
 app.post('/api/contact', async (req, res) => {
   const { name, email, subject, message } = req.body;
   if (!name || !email || !subject || !message)
     return res.status(400).json({ error: 'All fields required.' });
-
   const entry = { name, email, subject, message, created_at: new Date().toISOString() };
   memContacts.unshift({ ...entry, id: Date.now() });
-
   if (db) {
     const { data, error } = await db.from('contacts').insert([entry]).select();
-    if (error) console.error('[Contact Insert]', error.message);
+    if (error) console.error('[Contact]', error.message);
     return res.json({ success: true, data: data || [entry] });
   }
   res.json({ success: true, simulated: true, data: [entry] });
 });
 
-// ── ADMIN ─────────────────────────────────────────────────
+// ── ADMIN ──────────────────────────────────────────────────
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   const correct = process.env.ADMIN_PASSWORD || 'syedalihaxadmin';
@@ -155,7 +143,7 @@ app.delete('/api/admin/contacts/:id', requireDb, async (req, res) => {
   res.json({ success: true });
 });
 
-// ── SOCIALS ───────────────────────────────────────────────
+// ── SOCIALS ────────────────────────────────────────────────
 app.get('/api/socials', async (_req, res) => {
   if (db) {
     const { data, error } = await db.from('settings').select('*').eq('key', 'social_links').single();
@@ -177,4 +165,5 @@ app.put('/api/socials', async (req, res) => {
   res.json({ success: true });
 });
 
+// ── Vercel Handler Export ──────────────────────────────────
 export default app;
