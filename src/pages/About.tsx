@@ -104,8 +104,8 @@ export default function About() {
                   {/* Real Profile Image Avatar */}
                   <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-[#60A5FA] via-[#8B5CF6] to-[#C084FC] p-[2.5px] shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0 select-none pointer-events-none">
                     <img
-                      src="/src/assets/images/syedalihax_avatar_1779781699342.png"
-                      alt="Syed Ali Hax Avatar"
+                      src="/src/assets/images/syedalihax.png"
+                      alt="Syed Ali image"
                       className="w-full h-full object-cover rounded-full"
                       referrerPolicy="no-referrer"
                     />
