@@ -1,0 +1,6 @@
+{
+  "name": "Syed Ali Hax Portfolio Website",
+  "description": "A highly polished, interactive portfolio website for Syed Ali Hax, Software Engineer & CTO of Haxudio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
