@@ -104,7 +104,7 @@ export default function About() {
                   {/* Real Profile Image Avatar */}
                   <div className="w-56 h-56 rounded-full bg-gradient-to-tr from-[#60A5FA] via-[#8B5CF6] to-[#C084FC] p-[2.5px] shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0 select-none pointer-events-none">
                     <img
-                      src="/src/assets/images/SyedAli.avif"
+                      src="https://qsfyzlbmstmmswtikdqm.supabase.co/storage/v1/object/sign/project-images/SyedAli.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV9mODRmYTUzNi1hNzVkLTRlZmUtODE0Yi03YTk2MTM1YmRjNmYiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJwcm9qZWN0LWltYWdlcy9TeWVkQWxpLnBuZyIsImlhdCI6MTc3OTg4NTQ4MiwiZXhwIjoyMDk1MjQ1NDgyfQ.5WG8YsE4u4ph2fF2vaCeCk9X23QRXaLz6ETYvaWC2go"
                       alt="Syed Ali Image"
                       className="w-full h-full object-cover rounded-full"
                       referrerPolicy="no-referrer"
