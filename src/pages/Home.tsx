@@ -32,25 +32,25 @@ export default function Home() {
   }, []);
 
   const featuredSkills = [
-    { name: 'HTML', iconName: 'Html5', level: 95 },
-    { name: 'CSS', iconName: 'Css3', level: 90 },
-    { name: 'JavaScript', iconName: 'FileJson', level: 95 },
-    { name: 'TypeScript', iconName: 'FileCode', level: 90 },
-    { name: 'React', iconName: 'Atom', level: 95 },
-    { name: 'Next.js', iconName: 'FileCode2', level: 90 },
-    { name: 'Node.js', iconName: 'Server', level: 85 },
-    { name: 'MongoDB', iconName: 'Database', level: 85 },
+    { name: 'HTML', iconName: 'FileCode', level: 80 },
+    { name: 'CSS', iconName: 'Paintbrush', level: 85 },
+    { name: 'JavaScript', iconName: 'Braces', level: 75 },
+    { name: 'TypeScript', iconName: 'FileCode', level: 60 },
+    { name: 'React', iconName: 'Atom', level: 90 },
+    { name: 'Next.js', iconName: 'FileCode2', level: 85 },
+    { name: 'Node.js', iconName: 'Server', level: 75 },
+    { name: 'MongoDB', iconName: 'Database', level: 60 },
     { name: 'Tailwind CSS', iconName: 'Palette', level: 95 },
     { name: 'Git', iconName: 'GitBranch', level: 90 },
     { name: 'React Native', iconName: 'Smartphone', level: 80 },
-    { name: 'Deep Learning', iconName: 'Brain', level: 75 },
+    { name: 'Deep Learning', iconName: 'Brain', level: 60 },
   ];
 
   const stats = [
-    { id: 1, value: '3+', label: 'Years Experience', icon: Award, color: 'text-blue-500' },
-    { id: 2, value: '20+', label: 'Projects Completed', icon: Zap, color: 'text-purple-500' },
+    { id: 1, value: '2+', label: 'Years Experience', icon: Award, color: 'text-blue-500' },
+    { id: 2, value: '12+', label: 'Projects Completed', icon: Zap, color: 'text-purple-500' },
     { id: 3, value: '15+', label: 'Technologies', icon: Cpu, color: 'text-emerald-500' },
-    { id: 4, value: '100%', label: 'Satisfaction Rate', icon: CheckCircle2, color: 'text-amber-500' },
+    { id: 4, value: '90%', label: 'Satisfaction Rate', icon: CheckCircle2, color: 'text-amber-500' },
   ];
 
   // Global viewport transition variable

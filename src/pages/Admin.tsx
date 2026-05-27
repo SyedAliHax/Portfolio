@@ -45,7 +45,7 @@ export default function Admin() {
     instagram: '',
   });
   const [savingSocials, setSavingSocials] = useState<boolean>(false);
-  
+
   // Loading & feedback states
   const [loading, setLoading] = useState<boolean>(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -98,7 +98,7 @@ export default function Admin() {
 
   const fetchAllData = async () => {
     setLoading(true);
-    
+
     // Check health endpoint for real connection state
     try {
       const healthRes = await fetch('/api/health');
@@ -112,7 +112,10 @@ export default function Admin() {
 
     // Fetch Contacts
     try {
-      const contactsRes = await fetch('/api/admin/contacts');
+      const token = sessionStorage.getItem('hax_admin_token') || '';
+      const contactsRes = await fetch('/api/admin/contacts', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (contactsRes.ok) {
         const data = await contactsRes.json();
         setContacts(data);
@@ -223,7 +226,11 @@ export default function Admin() {
   const handleDeleteContact = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this contact message?')) return;
     try {
-      const res = await fetch(`/api/admin/contacts/${id}`, { method: 'DELETE' });
+      const token = sessionStorage.getItem('hax_admin_token') || '';
+      const res = await fetch(`/api/admin/contacts/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (res.ok) {
         setContacts(prev => prev.filter(c => c.id !== id));
         showToast('success', 'User message deleted successfully from feed.');
@@ -403,7 +410,7 @@ export default function Admin() {
         setIsExperienceFormOpen(false);
         fetchAllData();
       } else {
-         showToast('error', 'Saving to timeline archive failed.');
+        showToast('error', 'Saving to timeline archive failed.');
       }
     } catch (err) {
       showToast('error', 'Server offline.');
@@ -500,7 +507,7 @@ export default function Admin() {
 
   return (
     <div id="admin-dashboard-root" className="min-h-screen pt-24 pb-16 bg-[#0b0f19] text-[#F1F5F9] relative overflow-hidden">
-      
+
       {/* Toast Notification popup block */}
       <AnimatePresence>
         {toast && (
@@ -508,11 +515,10 @@ export default function Admin() {
             initial={{ opacity: 0, scale: 0.9, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
-            className={`fixed top-20 right-4 sm:right-8 z-55 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border backdrop-blur-md ${
-              toast.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/35'
-                : 'bg-rose-500/10 text-rose-400 border-rose-500/35'
-            }`}
+            className={`fixed top-20 right-4 sm:right-8 z-55 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border backdrop-blur-md ${toast.type === 'success'
+              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/35'
+              : 'bg-rose-500/10 text-rose-400 border-rose-500/35'
+              }`}
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -525,7 +531,7 @@ export default function Admin() {
       </AnimatePresence>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        
+
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-6 mb-8">
           <div>
@@ -582,44 +588,40 @@ export default function Admin() {
         <div className="flex border-b border-white/5 mb-8 overflow-x-auto pb-[1px] gap-2">
           <button
             onClick={() => setActiveTab('contacts')}
-            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeTab === 'contacts'
-                ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
-            }`}
+            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${activeTab === 'contacts'
+              ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
+              : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
+              }`}
           >
             <Mail className="w-4 h-4" />
             INQUIRIES FLOOD ({contacts.length})
           </button>
           <button
             onClick={() => setActiveTab('projects')}
-            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeTab === 'projects'
-                ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
-            }`}
+            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${activeTab === 'projects'
+              ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
+              : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
+              }`}
           >
             <FolderGit2 className="w-4 h-4" />
             PROJECT WORKS ({projects.length})
           </button>
           <button
             onClick={() => setActiveTab('experiences')}
-            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeTab === 'experiences'
-                ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
-            }`}
+            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${activeTab === 'experiences'
+              ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
+              : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
+              }`}
           >
             <Briefcase className="w-4 h-4" />
             CAREER STEPS ({experiences.length})
           </button>
           <button
             onClick={() => setActiveTab('socials')}
-            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${
-              activeTab === 'socials'
-                ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
-                : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
-            }`}
+            className={`px-5 py-4 border-b-2 text-xs font-bold font-mono transition-all flex items-center gap-2 shrink-0 cursor-pointer ${activeTab === 'socials'
+              ? 'border-indigo-500 text-white bg-white/5 rounded-t-xl'
+              : 'border-transparent text-slate-400 hover:text-white hover:bg-white/2'
+              }`}
           >
             <Share2 className="w-4 h-4" />
             SOCIAL NETWORKS
@@ -668,11 +670,10 @@ export default function Admin() {
                         </div>
                         <button
                           onClick={supabaseConnected ? () => handleDeleteContact(c.id) : () => showToast('error', 'Disconnected Mode! Message deletion locked.')}
-                          className={`p-2 border rounded-lg transition-all ${
-                            supabaseConnected 
-                              ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 opacity-80 group-hover:opacity-100 cursor-pointer' 
-                              : 'bg-slate-800/20 text-slate-500 border-slate-800 opacity-45 cursor-not-allowed'
-                          }`}
+                          className={`p-2 border rounded-lg transition-all ${supabaseConnected
+                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 opacity-80 group-hover:opacity-100 cursor-pointer'
+                            : 'bg-slate-800/20 text-slate-500 border-slate-800 opacity-45 cursor-not-allowed'
+                            }`}
                           title={supabaseConnected ? "Delete message from timeline" : "Delete action disabled"}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -716,11 +717,10 @@ export default function Admin() {
               </div>
               <button
                 onClick={supabaseConnected ? handleOpenProjectCreate : () => showToast('error', 'Disconnected Mode! Project creation is locked.')}
-                className={`px-5 py-3 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer ${
-                  supabaseConnected
-                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/10'
-                    : 'bg-indigo-650/40 opacity-50 cursor-not-allowed'
-                }`}
+                className={`px-5 py-3 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer ${supabaseConnected
+                  ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/10'
+                  : 'bg-indigo-650/40 opacity-50 cursor-not-allowed'
+                  }`}
               >
                 <Plus className="w-4 h-4" />
                 ADD NEW PROJECT
@@ -787,22 +787,20 @@ export default function Admin() {
                     <div className="flex items-center gap-2 pt-3 border-t border-white/5 mt-auto">
                       <button
                         onClick={supabaseConnected ? () => handleOpenProjectEdit(p) : () => showToast('error', 'Disconnected Mode! Project settings locked.')}
-                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold font-mono transition-all border flex items-center justify-center gap-2 cursor-pointer ${
-                          supabaseConnected
-                            ? 'bg-white/5 hover:bg-white/10 text-white border-white/5'
-                            : 'bg-white/2 text-slate-500 border-white/2 opacity-35 cursor-not-allowed'
-                        }`}
+                        className={`flex-1 py-2.5 rounded-xl text-xs font-bold font-mono transition-all border flex items-center justify-center gap-2 cursor-pointer ${supabaseConnected
+                          ? 'bg-white/5 hover:bg-white/10 text-white border-white/5'
+                          : 'bg-white/2 text-slate-500 border-white/2 opacity-35 cursor-not-allowed'
+                          }`}
                       >
                         <Edit2 className="w-3 h-3" />
                         Edit settings
                       </button>
                       <button
                         onClick={supabaseConnected ? () => handleDeleteProject(p.id) : () => showToast('error', 'Disconnected Mode! Project deletion locked.')}
-                        className={`py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center ${
-                          supabaseConnected
-                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/15 cursor-pointer'
-                            : 'bg-slate-800/10 text-slate-500 border-slate-800 opacity-35 cursor-not-allowed'
-                        }`}
+                        className={`py-2.5 px-3 rounded-xl transition-all border flex items-center justify-center ${supabaseConnected
+                          ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/15 cursor-pointer'
+                          : 'bg-slate-800/10 text-slate-500 border-slate-800 opacity-35 cursor-not-allowed'
+                          }`}
                         title={supabaseConnected ? "Delete project" : "Deletion locked"}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -827,11 +825,10 @@ export default function Admin() {
               </div>
               <button
                 onClick={supabaseConnected ? handleOpenExpCreate : () => showToast('error', 'Disconnected Mode! Experience creation is locked.')}
-                className={`px-5 py-3 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer ${
-                  supabaseConnected
-                    ? 'bg-[#8B5CF6] hover:bg-[#7c3aed] shadow-violet-600/10'
-                    : 'bg-violet-650/40 opacity-50 cursor-not-allowed'
-                }`}
+                className={`px-5 py-3 text-white rounded-xl text-xs font-bold tracking-wide transition-all shadow-md flex items-center gap-2 cursor-pointer ${supabaseConnected
+                  ? 'bg-[#8B5CF6] hover:bg-[#7c3aed] shadow-violet-600/10'
+                  : 'bg-violet-650/40 opacity-50 cursor-not-allowed'
+                  }`}
               >
                 <Plus className="w-4 h-4" />
                 ADD NEW WORK HISTORY
@@ -884,22 +881,20 @@ export default function Admin() {
                     <div className="flex items-center gap-2 w-full md:w-auto shrink-0 border-t md:border-t-0 border-white/5 pt-3 md:pt-0">
                       <button
                         onClick={supabaseConnected ? () => handleOpenExpEdit(exp) : () => showToast('error', 'Disconnected Mode! Career settings locked.')}
-                        className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
-                          supabaseConnected
-                            ? 'bg-white/5 hover:bg-white/10 text-white border-white/5'
-                            : 'bg-white/2 text-slate-500 border-white/2 opacity-35 cursor-not-allowed'
-                        }`}
+                        className={`flex-1 md:flex-none px-4 py-2 rounded-xl text-xs font-bold font-mono transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${supabaseConnected
+                          ? 'bg-white/5 hover:bg-white/10 text-white border-white/5'
+                          : 'bg-white/2 text-slate-500 border-white/2 opacity-35 cursor-not-allowed'
+                          }`}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                         Edit node
                       </button>
                       <button
                         onClick={supabaseConnected ? () => handleDeleteExperience(exp.id) : () => showToast('error', 'Disconnected Mode! Milestone deletion locked.')}
-                        className={`p-2.5 rounded-xl transition-all border flex items-center justify-center ${
-                          supabaseConnected
-                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/15 cursor-pointer'
-                            : 'bg-slate-800/10 text-slate-500 border-slate-800 opacity-35 cursor-not-allowed'
-                        }`}
+                        className={`p-2.5 rounded-xl transition-all border flex items-center justify-center ${supabaseConnected
+                          ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/15 cursor-pointer'
+                          : 'bg-slate-800/10 text-slate-500 border-slate-800 opacity-35 cursor-not-allowed'
+                          }`}
                         title={supabaseConnected ? "Delete Milestone Chronicle" : "Deletion locked"}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -911,7 +906,7 @@ export default function Admin() {
             )}
           </div>
         )}
-        
+
         {/* ========================================================
             TAB 4: SOCIAL CONNECTIONS SETTINGS PANEL
            ======================================================== */}
@@ -1037,7 +1032,7 @@ export default function Admin() {
               onClick={() => setIsProjectFormOpen(false)}
               className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
             />
-            
+
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1132,14 +1127,12 @@ export default function Admin() {
                     <button
                       type="button"
                       onClick={() => setProjectForm(prev => ({ ...prev, showGithub: !prev.showGithub }))}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        projectForm.showGithub ? 'bg-indigo-600' : 'bg-slate-800'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${projectForm.showGithub ? 'bg-indigo-600' : 'bg-slate-800'
+                        }`}
                     >
                       <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          projectForm.showGithub ? 'translate-x-5' : 'translate-x-0'
-                        }`}
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${projectForm.showGithub ? 'translate-x-5' : 'translate-x-0'
+                          }`}
                       />
                     </button>
                   </div>
@@ -1229,7 +1222,7 @@ export default function Admin() {
               onClick={() => setIsExperienceFormOpen(false)}
               className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
             />
-            
+
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

@@ -5,11 +5,10 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 // Load environment configuration
-dotenv.config();
+dotenv.config({ path: '.env' });
 
 const app = express();
-const PORT = 3000;
-
+const PORT = process.env.PORT || 3000;
 // Middleware for JSON body parser
 app.use(express.json());
 
@@ -174,7 +173,16 @@ const ensureConnected = (req: any, res: any, next: any) => {
   }
   next();
 };
-
+const verifyAdmin = (req: any, res: any, next: any) => {
+  const auth = req.headers['authorization'] || '';
+  const token = auth.replace('Bearer ', '');
+  const configuredPassword = process.env.ADMIN_PASSWORD || 'syedalihaxadmin';
+  const expected = `session_hax_token_${Buffer.from(configuredPassword).toString('base64')}`;
+  if (token !== expected) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
 // 1. PROJECTS API
 app.get('/api/projects', async (req, res) => {
   if (supabaseClient) {
@@ -211,7 +219,7 @@ app.get('/api/projects', async (req, res) => {
 
 app.post('/api/projects', ensureConnected, async (req, res) => {
   const p = req.body;
-  
+
   try {
     const newProj = {
       title: p.title || 'New Project',
@@ -517,7 +525,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // 2. GET CONTACT MESSAGES INBOX
-app.get('/api/admin/contacts', async (req, res) => {
+app.get('/api/admin/contacts', verifyAdmin, async (req, res) => {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from('contacts').select('*').order('created_at', { ascending: false });
@@ -557,7 +565,7 @@ app.get('/api/socials', async (req, res) => {
         .select('*')
         .eq('key', 'social_links')
         .single();
-      
+
       if (!error && data && data.value) {
         const merged = { ...serverSocials, ...data.value };
         return res.json(merged);

@@ -8,10 +8,10 @@ export interface SocialLinks {
 }
 
 export const defaultSocials: SocialLinks = {
-  github: 'https://github.com/syedalihax',
-  linkedin: 'https://linkedin.com/in/syedalihax',
-  facebook: 'https://facebook.com/syedalihax',
-  instagram: 'https://instagram.com/syedalihax',
+  github: 'https://github.com/syedalibg',
+  linkedin: 'https://linkedin.com/in/syedalibg',
+  facebook: 'https://facebook.com',
+  instagram: 'https://instagram.com',
 };
 
 // Global cache to prevent multiple fetches and flickering

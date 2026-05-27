@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { FolderGit2, FolderOpen, Grid, Sparkles, Loader } from 'lucide-react';
 import ProjectCard from '../components/ProjectCard';
-import { projectsData } from '../data';
 import { Project } from '../types';
 
 export default function Projects() {

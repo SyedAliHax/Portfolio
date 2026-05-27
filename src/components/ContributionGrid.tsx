@@ -20,20 +20,20 @@ export default function ContributionGrid() {
   // Generate 52 weeks * 7 days stable random data representing coding activity
   const contributionData = useMemo(() => {
     const data: DayData[][] = [];
-    const baseDate = new Date('2026-05-26T00:00:00Z'); // Current system date context
+    const baseDate = new Date();
     
     const weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     // Start 52 weeks ago (364 days ago)
     const startDate = new Date(baseDate.getTime() - 364 * 24 * 60 * 60 * 1000);
-    
+
     // Grid alignment: 52 columns (weeks), each with 7 rows (days)
     for (let w = 0; w < 52; w++) {
       const week: DayData[] = [];
       for (let d = 0; d < 7; d++) {
         const currentDate = new Date(startDate.getTime() + (w * 7 + d) * 24 * 60 * 60 * 1000);
-        
+
         // Random level mapping
         // Higher probability for empty/low days, occasional high bursts
         const randomVal = Math.random();
@@ -89,7 +89,7 @@ export default function ContributionGrid() {
   const monthLabels = useMemo(() => {
     const labels: { text: string; colIndex: number }[] = [];
     let lastMonth = '';
-    
+
     contributionData.forEach((week, index) => {
       const month = week[0].monthName;
       if (month !== lastMonth && index % 4 === 0) {
@@ -104,7 +104,7 @@ export default function ContributionGrid() {
   const handleMouseEnter = (event: React.MouseEvent, day: DayData) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const container = event.currentTarget.closest('#grid-wrapper')?.getBoundingClientRect();
-    
+
     if (container) {
       setHoveredCell({
         data: day,
@@ -130,7 +130,7 @@ export default function ContributionGrid() {
             </p>
           </div>
         </div>
-        
+
         {/* Color Legend Indicators */}
         <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400">
           <span>Less</span>
@@ -146,7 +146,7 @@ export default function ContributionGrid() {
       {/* Grid wrapper with horizontal scrolling on mobile */}
       <div className="w-full overflow-x-auto relative scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800" id="scroll-container">
         <div className="min-w-[720px] pb-3 pt-6 px-1 relative" id="grid-wrapper">
-          
+
           {/* Month Labels row */}
           <div className="absolute top-0 left-8 flex text-[10px] font-mono text-slate-400 font-semibold uppercase leading-none">
             {monthLabels.map((lbl, idx) => (

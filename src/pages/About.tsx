@@ -102,10 +102,10 @@ export default function About() {
                   <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 to-purple-500/10 opacity-40 select-none pointer-events-none" />
                   
                   {/* Real Profile Image Avatar */}
-                  <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-[#60A5FA] via-[#8B5CF6] to-[#C084FC] p-[2.5px] shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0 select-none pointer-events-none">
+                  <div className="w-56 h-56 rounded-full bg-gradient-to-tr from-[#60A5FA] via-[#8B5CF6] to-[#C084FC] p-[2.5px] shadow-lg shadow-indigo-500/30 overflow-hidden shrink-0 select-none pointer-events-none">
                     <img
-                      src="/src/assets/images/syedalihax.png"
-                      alt="Syed Ali image"
+                      src="/src/assets/images/SyedAli.avif"
+                      alt="Syed Ali Image"
                       className="w-full h-full object-cover rounded-full"
                       referrerPolicy="no-referrer"
                     />
